@@ -1,0 +1,30 @@
+name: Build APK
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Tao scaffold Android/iOS (KHONG ghi de lib/)
+        run: flutter create --platforms=android,ios --org com.example --project-name printer_ip_tool .
+      - name: Kiem tra code that su co mat
+        run: |
+          grep -q "Doi IP May In" lib/main.dart \
+            || (echo "LOI: lib/main.dart chua phai code app. Hay dan lai noi dung main.dart." && exit 1)
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
